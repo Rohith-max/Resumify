@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResumeBuilder AI</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --text-color: #ffffff;
+            --input-bg: #2d2d2d;
+            --border-color: #404040;
+            --primary-color: #10a37f;
+            --primary-hover: #0d8c6d;
+            --message-bg: #2d2d2d;
+            --user-message-bg: #404040;
+            --typing-bg: #2d2d2d;
+            --sidebar-bg: #202123;
+            --sidebar-width: 300px;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #ffffff;
+            --text-color: #1a1a1a;
+            --input-bg: #f7f7f8;
+            --border-color: #e5e5e5;
+            --message-bg: #f7f7f8;
+            --user-message-bg: #ffffff;
+            --typing-bg: #f7f7f8;
+            --sidebar-bg: #f7f7f8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            transition: background-color 0.3s, color 0.3s;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .page-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            height: 100%;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 20px;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--input-bg);
+        }
+
+        .upload-section {
+            background-color: var(--input-bg);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .file-input-container {
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-input-label {
+            font-size: 12px;
+            color: var(--text-color);
+            margin-bottom: 5px;
+            display: block;
+            transition: color 0.3s ease;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .file-input:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 1px var(--primary-color);
+        }
+
+        .file-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(16, 163, 127, 0.2);
+        }
+
+        .file-input::file-selector-button {
+            padding: 6px 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 8px;
+        }
+
+        .file-input::file-selector-button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .submit-btn:disabled {
+            background-color: #666666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .submit-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .submit-btn:hover::after {
+            transform: translateX(100%);
+        }
+
+        .history-section {
+            flex: 1;
+            overflow-y: auto;
+            background-color: var(--input-bg);
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .history-item {
+            padding: 10px;
+            background-color: var(--bg-color);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .history-item:hover {
+            background-color: var(--message-bg);
+        }
+
+        .history-item-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .history-item-btn {
+            padding: 4px 8px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .download-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .delete-btn {
+            background-color: #dc2626;
+            color: white;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            animation: fadeIn 0.3s ease-in-out;
+            position: relative;
+        }
+
+        .message:not(:last-child) {
+            margin-bottom: 24px;
+        }
+
+        .message-content {
+            padding-right: 40px;
+        }
+
+        .message-actions {
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .message:hover .message-actions {
+            opacity: 1;
+        }
+
+        .download-message-btn {
+            padding: 6px 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .download-message-btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .user-message {
+            background-color: var(--user-message-bg);
+            align-self: flex-end;
+            border: 1px solid var(--border-color);
+        }
+
+        .ai-message {
+            background-color: var(--message-bg);
+            align-self: flex-start;
+            border: 1px solid var(--border-color);
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 16px;
+            background-color: var(--typing-bg);
+            border-radius: 8px;
+            align-self: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background-color: var(--text-color);
+            border-radius: 50%;
+            animation: typing 1s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .error-message {
+            color: #dc2626;
+            background-color: #fee2e2;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: none;
+        }
+
+        .help-text {
+            font-size: 11px;
+            color: var(--text-color);
+            opacity: 0.7;
+            margin-top: 4px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>ResumeBuilder AI</h1>
+                <button class="theme-toggle" id="themeToggle">🌙</button>
+            </div>
+
+            <div class="upload-section">
+                <div class="file-input-container">
+                    <label for="resumeFile" class="file-input-label">Your Resume (TXT or DOCX only)</label>
+                    <input type="file" id="resumeFile" class="file-input" accept=".txt,.docx">
+                </div>
+                <div class="file-input-container">
+                    <label for="jobDescFile" class="file-input-label">Job Description (TXT or DOCX only)</label>
+                    <input type="file" id="jobDescFile" class="file-input" accept=".txt,.docx">
+                </div>
+                <div class="file-input-container">
+                    <label for="templateFile" class="file-input-label">Template (TXT or DOCX files only)</label>
+                    <input type="file" id="templateFile" class="file-input" accept=".txt,.docx">
+                    <div class="help-text">Template file will be used to match the exact format and structure</div>
+                </div>
+                <button id="submitBtn" class="submit-btn">Generate Resume</button>
+            </div>
+
+            <div class="history-section">
+                <div class="history-list" id="historyList"></div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="chat-container" id="chatContainer">
+                <div class="message ai-message">
+                    Hello! I'm your AI Resume Builder. Please upload your resume and job description to get started.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const historyList = document.getElementById('historyList');
+        const resumeFile = document.getElementById('resumeFile');
+        const jobDescFile = document.getElementById('jobDescFile');
+        const templateFile = document.getElementById('templateFile');
+        const submitBtn = document.getElementById('submitBtn');
+        const themeToggle = document.getElementById('themeToggle');
+        let isProcessing = false;
+        let currentResumeId = null;
+
+        // Console.log wrapper for debugging
+        function log(message, data = null) {
+            const timestamp = new Date().toISOString().substr(11, 8);
+            if (data) {
+                console.log(`[${timestamp}] ${message}`, data);
+            } else {
+                console.log(`[${timestamp}] ${message}`);
+            }
+        }
+
+        // Theme handling
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeToggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            themeToggle.textContent = newTheme === 'dark' ? '🌙' : '☀️';
+        });
+
+        // Load history on page load
+        loadHistory();
+
+        function downloadResume(resumeId) {
+            log(`Starting download for resume: ${resumeId}`);
+            // Create a direct link to download the PDF
+            const downloadUrl = `/download/${resumeId}`;
+            
+            // Method 1: Using window.open (works in most browsers for downloads)
+            const newWindow = window.open(downloadUrl, '_blank');
+            
+            // Method 2: Create a direct form submission (fallback)
+            setTimeout(() => {
+                // If the window was blocked or failed to open
+                if (!newWindow || newWindow.closed) {
+                    log("Using form submission fallback for download");
+                    const form = document.createElement('form');
+                    form.method = 'GET';
+                    form.action = downloadUrl;
+                    form.target = '_blank';
+                    document.body.appendChild(form);
+                    form.submit();
+                    setTimeout(() => {
+                        document.body.removeChild(form);
+                    }, 1000);
+                }
+                
+                // Method 3: Fallback to iframe (last resort)
+                setTimeout(() => {
+                    log("Using iframe fallback for download");
+                    const iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    iframe.src = downloadUrl;
+                    document.body.appendChild(iframe);
+                    setTimeout(() => {
+                        document.body.removeChild(iframe);
+                    }, 1000);
+                }, 1000);
+            }, 500);
+        }
+
+        function addMessage(content, isError = false) {
+            log(`Adding message: ${isError ? 'ERROR' : 'INFO'}`);
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isError ? 'error-message' : 'ai-message'}`;
+            
+            if (!isError && currentResumeId) {
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'message-actions';
+                actionsDiv.innerHTML = `
+                    <button class="download-message-btn" onclick="downloadResume('${currentResumeId}')">Download</button>
+                `;
+                messageDiv.appendChild(actionsDiv);
+            }
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = content;
+            
+            messageDiv.appendChild(contentDiv);
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        async function loadHistory() {
+            try {
+                log("Loading history from server");
+                const response = await fetch('/history');
+                const history = await response.json();
+                log(`Loaded ${history.length} history items`);
+                
+                historyList.innerHTML = '';
+                history.forEach(item => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    historyItem.innerHTML = `
+                        <span>${new Date(item.timestamp).toLocaleString()}</span>
+                        <div class="history-item-actions">
+                            <button class="history-item-btn download-btn" onclick="event.stopPropagation(); downloadResume('${item.id}')">Download</button>
+                            <button class="history-item-btn delete-btn" onclick="event.stopPropagation(); deleteResume('${item.id}')">Delete</button>
+                        </div>
+                    `;
+                    historyItem.addEventListener('click', () => loadResume(item));
+                    historyList.appendChild(historyItem);
+                });
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        async function loadResume(item) {
+            log(`Loading resume: ${item.id}`);
+            chatContainer.innerHTML = '';
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai-message';
+            
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'message-actions';
+            actionsDiv.innerHTML = `
+                <button class="download-message-btn" onclick="downloadResume('${item.id}')">Download</button>
+            `;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = item.display_text;
+            
+            messageDiv.appendChild(actionsDiv);
+            messageDiv.appendChild(contentDiv);
+            chatContainer.appendChild(messageDiv);
+            
+            currentResumeId = item.id;
+        }
+
+        async function deleteResume(resumeId) {
+            try {
+                log(`Deleting resume: ${resumeId}`);
+                const response = await fetch('/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ resume_id: resumeId })
+                });
+                if (response.ok) {
+                    await loadHistory();
+                    if (currentResumeId === resumeId) {
+                        chatContainer.innerHTML = '<div class="message ai-message">Hello! I\'m your AI Resume Builder. Please upload your resume and job description to get started.</div>';
+                        currentResumeId = null;
+                    }
+                }
+            } catch (error) {
+                console.error('Error deleting resume:', error);
+            }
+        }
+
+        function showTypingIndicator() {
+            const indicator = document.createElement('div');
+            indicator.className = 'typing-indicator';
+            indicator.innerHTML = '<span></span><span></span><span></span>';
+            chatContainer.appendChild(indicator);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return indicator;
+        }
+
+        function removeTypingIndicator(indicator) {
+            if (indicator && indicator.parentNode) {
+                indicator.parentNode.removeChild(indicator);
+            }
+        }
+
+        async function handleSubmit() {
+            if (isProcessing) return;
+            
+            const resume = resumeFile.files[0];
+            const jobDesc = jobDescFile.files[0];
+            const template = templateFile.files[0];
+            
+            if (!resume || !jobDesc) {
+                addMessage('Please upload both a resume and job description.', true);
+                return;
+            }
+            
+            // Validate file types
+            const resumeAllowedTypes = [
+                'text/plain',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ];
+            
+            const templateAllowedTypes = [
+                'text/plain',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ];
+            
+            if (!resumeAllowedTypes.includes(resume.type)) {
+                addMessage('Resume must be a text (.txt) or Word (.docx) file.', true);
+                return;
+            }
+            
+            if (!resumeAllowedTypes.includes(jobDesc.type)) {
+                addMessage('Job description must be a text (.txt) or Word (.docx) file.', true);
+                return;
+            }
+            
+            if (template && !templateAllowedTypes.includes(template.type)) {
+                addMessage('Template must be a text (.txt) or Word (.docx) file.', true);
+                return;
+            }
+
+            isProcessing = true;
+            submitBtn.disabled = true;
+            log("Starting resume generation");
+
+            // Create form data
+            const formData = new FormData();
+            formData.append('resume', resume);
+            formData.append('job_desc', jobDesc);
+            if (template) {
+                log(`Adding template: ${template.name}`);
+                formData.append('template', template);
+            }
+
+            const typingIndicator = showTypingIndicator();
+
+            try {
+                log("Submitting form data to server");
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                log(`Response received: ${data.resume_id}`);
+                
+                removeTypingIndicator(typingIndicator);
+                
+                if (data.error) {
+                    addMessage(`Error: ${data.error}`, true);
+                } else {
+                    // Display the generated resume
+                    currentResumeId = data.resume_id;
+                    
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message ai-message';
+                    
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'message-actions';
+                    actionsDiv.innerHTML = `
+                        <button class="download-message-btn" onclick="downloadResume('${data.resume_id}')">Download</button>
+                        <a href="/download/${data.resume_id}" download="resume_${data.resume_id}.pdf" style="display:none;" id="direct-download-${data.resume_id}"></a>
+                    `;
+                    
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'message-content';
+                    contentDiv.innerHTML = data.display_text;
+                    
+                    messageDiv.appendChild(actionsDiv);
+                    messageDiv.appendChild(contentDiv);
+                    chatContainer.appendChild(messageDiv);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                    
+                    await loadHistory();
+                    
+                    // Auto-download after a delay
+                    setTimeout(() => {
+                        // Try the simple direct link approach first
+                        document.getElementById(`direct-download-${data.resume_id}`).click();
+                    }, 1000);
+                }
+            } catch (error) {
+                log(`Error during form submission: ${error.message}`, error);
+                removeTypingIndicator(typingIndicator);
+                addMessage(`Error: ${error.message}`, true);
+            } finally {
+                isProcessing = false;
+                submitBtn.disabled = false;
+            }
+        }
+
+        submitBtn.addEventListener('click', handleSubmit);
+    </script>
+</body>
+</html> 
